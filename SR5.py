@@ -80,16 +80,26 @@ def norm(v0):
 class Render (object):
 	def __init__(self, width, height):
 		
-		self.clear()
+		
 		self.width = width
 		self.height = height
 		self.current_color = WHITE
+		self.framebuffer = []
+		self.clear()
 
 	def clear (self):
 		self.pixels = [
 			[BLACK for x in range(self.width)
 			]
 			for y in range(self.height)
+		]
+
+		self.framebuffer = [
+			[
+				BLACK
+					for x in range(an)
+			]
+			for y in range(al)
 		]
 
 		
@@ -183,7 +193,7 @@ class Render (object):
 			xi = round(A.x - mi_ac * (A.y - y))
 			xf = round(A.x - mi_ab * (A.y - y))	
 
-		if x1 > xf:
+		if xi > xf:
 			xi, xf = xf, xi
 		for x in range(xi ,xf + 1):
 			self.point(x, y, color)
@@ -227,7 +237,7 @@ class Render (object):
 	
 		
 	def load(self, filename, translate=(0,0,0), scale=(1,1,1), texture = None):
-		model = Obj(filename)
+		model = Render(filename)
 		light = V3(0,0,1)		
 		
 		for face in model.vfaces:
@@ -304,34 +314,14 @@ class Texture(object):
 
 		return bytes(map(lambda b: round(b*intensity)
 							 if b * intensity > 0 else 0,
-						 self.pixles[y][x]
+						 self.pixels[y][x]
 						)
 					)
 
-
-def glCreateWindow(ancho, alto):
-        return Bitmap(ancho, alto)
-def glViewPort(x,y,largo,alto):
-	l = largo
-	a = alto
-	im.ViewPort(x,y,l,a)
-def glClear(r,g,b):
-        im.clearColor(r,g,b)
-def glVertex(x,y):
-        im.vertex(x,y)
 #def glColor(r,g,b,x,y):
 #        rvertex(x,y,ancho,alto,color(r*255,g*255,b*255))
 def glFinish(name):
         r.Crear(name+".bmp")
-
-def glColor(x,y,color):
-	r.Color(x,y,color)
-	
-def glLine(x0,y0,x1,y1):
-	im.Linea(x0,y0,x1,y1)
-	
-def glPoint(x,y):
-	im.point(x,y)
 
 	
 def try_int(s, base=10, val=None):
@@ -342,17 +332,14 @@ def try_int(s, base=10, val=None):
 		
 
 
-an = 1280
-al = 1280
+an = 1900
+al = 1900
 
 
 				
-#im = glCreateWindow(an, al)
-
-#r = Obj("Poopybutthole.obj")
-#r.ViewPort(0,0,800,600)
-#r.load("Poopybutthole.obj")
-#l = Obj("Poopybutthole.mtl")
-#glFinish('out')
+r = Render(an, al)
+t = Texture('Poopy.bmp')
+r.load('Poopybutthole.obj')
+glFinish('out')
 				
 				
