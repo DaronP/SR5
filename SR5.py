@@ -169,52 +169,29 @@ class Render (object):
 	def point(self, x, y, color):
 		self.framebuffer[x][y] = color
 			
-	def triangle(self, A, B, C, color = None):
-		if A.y > B.y:
-			A, B = B, A
-		if A.y > C.y:
-			A, C = C, A
-		if B.y > C.y:
-			B, C = C, B
-
-
-		dx_ac = C.x - A.x
-		dy_ac = C.y - A.y
-
-		if dy_ac ==0:
-			return
-		mi_ac = dx_ac/dy_ac
-
-		dx_ab = B.x - A.x
-		dy_ab = B.y - A.y
-
-		if dy_ac != 0:
-			mi_ab = dx_ab/dy_ab
-
-		for y in range(A.y, B.y + 1):
-			xi = round(A.x - mi_ac * (A.y - y))
-			xf = round(A.x - mi_ab * (A.y - y))	
-
-		if xi > xf:
-			xi, xf = xf, xi
-		for x in range(xi ,xf + 1):
-			self.point(x, y, color)
-
-		dx_bc = C.x - B.x
-		dy_bc = C.y - B.y
-
-		if dy_bc:
-			mi_bc = dx_bc/dy_bc
+	def triangle(self, A, B, C, color = None, texture_coords=(), intensity=intensity):
+		bbox_min, bbox_max = bbox(A, B, C)
 		
-			for y in range(B.y, C.y + 1):
-				xi = round(A.x - mi_ac * (A.y - y))
-				xf = round(B.x - mi_bc * (B.y - y))
+		for x in range(bbox_min.x, bbox_max.x + 1):
+			for y in range(bbox_min.y, bbox_max.y + 1):
+				w, v, u = barycentric(A, B, C, V2(x,y))
+				
+				if w < 0 or v < 0 or u < 0:
+					continue
+				
+				if texture:
+					tA, tB, tC = texture_coords
+					tx = tA.x * w + tB.x * v + tC.x * u
+					ty = tA.y * w + tB.y * v + tC.y * u
 
-				if xi > xf:
-					xi, xf = xf, xi
-
-				for x in range(xi, xf + 1):
-					self.point(x, y, color)	
+					color = texture.get_color(tx, ty, intensity)
+				
+				z = A.z * w + B.z * v + C.z * u
+				
+					
+				if z > self.zbuffer[x][y]:
+					self.point(x,y, color)
+					self.zbuffer[x][y] = z
 			
 
 	def read(self):
@@ -322,6 +299,7 @@ class Texture(object):
 		self.width = struct.unpack("=l", img.read(4))
 		self.height = struct.unpack("=l", img.read(4))
 		self.pixels = []
+		
 		img.seek(header_size)
 
 		for y in range(self.height):
@@ -335,7 +313,7 @@ class Texture(object):
 
 		img.close()
 
-	def getColor(self, tx, ty,intensity = 1):
+	def get_Color(self, tx, ty,intensity = 1):
 		x = int(tx * self.width)
 		y = int(tx * self.height)
 
@@ -356,6 +334,53 @@ def try_int(s, base=10, val=None):
 		return int(s,base)
 	except ValueError:
 		return val
+
+def tri(self, A, B, C, color = None, texture_coords=(), intensity=intensity):
+		if A.y > B.y:
+			A, B = B, A
+		if A.y > C.y:
+			A, C = C, A
+		if B.y > C.y:
+			B, C = C, B
+
+
+		dx_ac = C.x - A.x
+		dy_ac = C.y - A.y
+
+		if dy_ac ==0:
+			return
+		mi_ac = dx_ac/dy_ac
+
+		dx_ab = B.x - A.x
+		dy_ab = B.y - A.y
+
+		if dy_ac != 0:
+			mi_ab = dx_ab/dy_ab
+
+		for y in range(A.y, B.y + 1):
+			xi = round(A.x - mi_ac * (A.y - y))
+			xf = round(A.x - mi_ab * (A.y - y))	
+
+		if xi > xf:
+			xi, xf = xf, xi
+		for x in range(xi ,xf + 1):
+			self.point(x, y, color)
+
+		dx_bc = C.x - B.x
+		dy_bc = C.y - B.y
+
+		if dy_bc:
+			mi_bc = dx_bc/dy_bc
+		
+			for y in range(B.y, C.y + 1):
+				xi = round(A.x - mi_ac * (A.y - y))
+				xf = round(B.x - mi_bc * (B.y - y))
+
+				if xi > xf:
+					xi, xf = xf, xi
+
+				for x in range(xi, xf + 1):
+					self.point(x, y, color)
 		
 
 
@@ -368,5 +393,3 @@ r = Render(an, al)
 t = Texture('Poopy.bmp')
 r.load('Poopybutthole.obj')
 glFinish('out')
-				
-				
