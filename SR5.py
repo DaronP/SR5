@@ -85,6 +85,7 @@ class Render (object):
 		self.height = height
 		self.current_color = WHITE
 		self.framebuffer = []
+		self.tvertices = []
 		self.clear()
 
 	def clear (self):
@@ -212,10 +213,7 @@ class Render (object):
 					xi, xf = xf, xi
 
 				for x in range(xi, xf + 1):
-					self.point(x, y, color)
-
-
-	
+					self.point(x, y, color)	
 			
 
 	def read(self):
@@ -236,51 +234,81 @@ class Render (object):
 	
 	
 		
-	def load(self, filename, translate=(0,0,0), scale=(1,1,1), texture = None):
+	def load(self, filename, translate=(0,0,0), scale=(1,1,1), texture=None):
 		model = Render(filename)
-		light = V3(0,0,1)		
+		light = V3(0,0,1)
 		
 		for face in model.vfaces:
 			vcount = len(face)
-
+			
 			if vcount == 3:
-				face.pop(2)			
-
-				colr1 = [face[0][0][0]]
-				colr2 = [face[0][0][1]]
-				colr3 = [face[0][0][2]]
-
-				for i in range(0,1):
-					colr1.pop(i)
-					colr2.pop(i)
-					colr3.pop(i)
-
-				f1 = face[0][0] - 1
-				f2 = face[1][0] - 1
-				f3 = face[2][0] - 1
-
+				f1 = face[0][0] -1
+				f2 = face[1][0] -1
+				f3 = face[2][0] -1
 				
+				a = self.transform(model.vertices[f1], translate, scale)
+				b = self.transform(model.vertices[f2], translate, scale)
+				c = self.transform(model.vertices[f3], translate, scale)
 				
-
-				colr = V3(colr1, colr2, colr3)
-
-				a = V3(*model.vertices[f1])
-				b = V3(*model.vertices[f2])
-				c = V3(*model.vertices[f3])
-
-
-				normal = norm(cross(sub(b,a), sub(c,a)))
+				normal = norm(cross(sub(b, a), sub(c,a)))
 				intensity = dot(normal, light)
-				grey = round((255 * colr) * intensity)
-
-				a = self.transform(a)
-				b = self.transform(b)
-				c = self.transform(c)
-
-				if intensity<0:
-					continue
 				
-				self.triangle(a, b, c, color(grey, grey, grey))
+				if not texture:
+					grey = round(255 * intensity)
+					
+					if grey < 0:
+						continue
+					self.triangle(A, B, C, color(grey, grey, grey))
+						
+				else:
+					t1 = face[0][1] -1
+					t2 = face[1][1] -1
+					t3 = face[2][1] -1
+					print(*model.tvertices[t1])
+					tA = V3(*model.tvertices[t1])
+					tB = V3(*model.tvertices[t2])
+					tC = V3(*model.tvertices[t3])
+					
+					self.triangle(a, b, c, texture=texture, texture_coords=(tA, tB, tC))
+						
+			else:
+				f1 = face[0][0] -1
+				f2 = face[1][0] -1
+				f3 = face[2][0] -1
+				f4 = face[3][0] -1
+				
+				vertices = [
+					self.transform(model.vertices[f1], translate, scale),
+					self.transform(model.vertices[f2], translate, scale),
+					self.transform(model.vertices[f3], translate, scale),
+					self.transform(model.vertices[f4], translate, scale)
+				]
+			
+				normal = norm(cross(sub(vertices[0], vertices[1]), sub(vertices[1], vertices[2])))
+				intensity = dot(normal, light)
+				grey = round(255 * intensity)
+				
+				A, B, C, D = vertices
+			
+				if not texture:
+					grey = round(255 * intensity)
+					if grey < 0:
+						continue
+					self.triangle(A, B, C, color(grey, grey, grey))
+					self.triangle(A, C, D, color(grey, grey, grey))
+					
+				else:
+					t1 = face[0][1] -1
+					t2 = face[1][1] -1
+					t3 = face[2][1] -1
+					t4 = face[3][1] -1
+					tA = V3(*model.tvertices[t1])
+					tB = V3(*model.tvertices[t2])
+					tC = V3(*model.tvertices[t3])
+					tD = V3(*model.tvertices[t4])
+				
+					self.triangle(A, B, C, texture=texture, texture_coords=(tA, tB, tC))
+					self.triangle(A, C, D, texture=texture, texture_coords=(tA, tC, tD))
 
 class Texture(object):
 	def __init__(self, path):
