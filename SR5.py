@@ -79,8 +79,7 @@ def norm(v0):
 		
 class Render (object):
 	def __init__(self, width, height):
-		with open(filename) as f:
-			self.lines = f.read().splitlines()
+		
 		
 		self.width = width
 		self.height = height
