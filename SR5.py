@@ -78,14 +78,16 @@ def norm(v0):
 
 		
 class Render (object):
-	def __init__(self, width, height):
-		
+	def __init__(self, filename, width, height):
+		with open(filename) as f:
+			self.lines = f.read().splitlines()
 		
 		self.width = width
 		self.height = height
 		self.current_color = WHITE
 		self.framebuffer = []
 		self.tvertices = []
+		self.vfaces = []
 		self.vertices = []
 		self.clear()
 
@@ -169,7 +171,7 @@ class Render (object):
 	def point(self, x, y, color):
 		self.framebuffer[x][y] = color
 			
-	def triangle(self, A, B, C, color = None, texture_coords=(), intensity=intensity):
+	def triangle(self, A, B, C, texture = None, texture_coords=(), intensity=()):
 		bbox_min, bbox_max = bbox(A, B, C)
 		
 		for x in range(bbox_min.x, bbox_max.x + 1):
@@ -294,10 +296,10 @@ class Texture(object):
 	def read(self):
 		img = open(self.path, "rb")
 		img.seek(10)
-		header_size = struct.unpack("=l", img.read(4))
+		header_size = struct.unpack("=l", img.read(4))[0]
 		img.seek(18)
-		self.width = struct.unpack("=l", img.read(4))
-		self.height = struct.unpack("=l", img.read(4))
+		self.width = float(struct.unpack("=l", img.read(4))[0])
+		self.height = float(struct.unpack("=l", img.read(4))[0])
 		self.pixels = []
 		
 		img.seek(header_size)
@@ -391,5 +393,5 @@ al = 1900
 				
 r = Render(an, al)
 t = Texture('Poopy.bmp')
-r.load('Poopybutthole.obj')
+r.load('Poopybutthole.obj', (0,0,0), (0.25, 0.25, 0.25), texture = t)
 glFinish('out')
