@@ -79,13 +79,15 @@ def norm(v0):
 		
 class Render (object):
 	def __init__(self, width, height):
-		
+		with open(filename) as f:
+			self.lines = f.read().splitlines()
 		
 		self.width = width
 		self.height = height
 		self.current_color = WHITE
 		self.framebuffer = []
 		self.tvertices = []
+		self.vertices = []
 		self.clear()
 
 	def clear (self):
@@ -217,7 +219,6 @@ class Render (object):
 			
 
 	def read(self):
-		current_material = None
 		for line in self.lines:
 			if line:
 			
@@ -226,11 +227,10 @@ class Render (object):
 				if prefix == 'v':
 					self.vertices.append(list(map(float, value.split(' '))))
 				
-				elif prefix == "usemtl":
-					current_material = value
+				elif prefix == "vt":
+					self.vertices.append(list(map(float, value.split(' '))))
 				elif prefix == 'f':
-					colrs = self.materials[current_material] 
-					self.vfaces.append([list(map(try_int, face.split('/'))) for face in value.split(' ')].extend(colrs))
+					self.vfaces.append([list(map(try_int, face.split('/'))) for face in value.split(' ')])
 	
 	
 		
